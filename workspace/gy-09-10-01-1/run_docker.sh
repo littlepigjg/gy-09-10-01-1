@@ -49,14 +49,9 @@ docker run -dit --init \
 # 5. 将项目文件复制到 workspace/项目名/（双向同步，容器内实时可见）
 PROJECT_DIR="$(basename "$PWD")"
 echo "📂 迁移项目到 workspace/$PROJECT_DIR/ ..."
-rsync -a --exclude='workspace' --exclude='node_modules' --exclude='__pycache__' \
-    --exclude='.idea' --exclude='.vscode' --exclude='.pytest_cache' --exclude='.venv' --exclude='venv' \
+rsync -a --exclude='workspace' --exclude='.git' --exclude='node_modules' --exclude='__pycache__' \
     "$PWD/" "$PWD/workspace/$PROJECT_DIR/"
 
-# 6. 删除当前目录下已迁移的项目文件（仅保留 workspace/ 和隐藏配置）
-echo "🗑️  清理已迁移的项目文件..."
-find "$PWD" -maxdepth 1 ! -name 'workspace' ! -name '.' ! -name '.*' -exec rm -rf {} +
-
-# 7. 进入容器
+# 6. 进入容器
 echo "🎯 进入容器..."
 docker attach "$CONTAINER_NAME"
