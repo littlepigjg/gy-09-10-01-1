@@ -2,17 +2,11 @@
 set -e
 
 # ========== 配置区 ==========
-API_KEY="${API_KEY:-}"                              # 从环境变量读取，未设置时提示输入
-IMAGE="adminfather/benzhi-claude-code"
+API_KEY="${API_KEY:-}"
+IMAGE="adminfather/benzhi-claude-code:20260909-isolated-git"
 # =============================
 
-# 动态容器名：当前目录名
-CONTAINER_NAME="$(basename "$PWD")"
-# 本机工作目录：当前目录下的 workspace 子目录
-RUN_DIR="$PWD/workspace"
-
-echo "📁 项目名称: $CONTAINER_NAME"
-echo "🐳 容器名:   $CONTAINER_NAME"
+CONTAINER_NAME="claude-task"
 
 # 1. 检查容器是否已存在
 if docker ps -a --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
@@ -23,7 +17,6 @@ if docker ps -a --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
     else
         echo "⚠️  容器 $CONTAINER_NAME 已存在但未运行。"
         echo "   若需重建，请先执行: docker rm $CONTAINER_NAME"
-        echo "   或直接执行 end_docker.sh 导出并删除后重来。"
         exit 1
     fi
 fi
@@ -38,19 +31,18 @@ if [ -z "$API_KEY" ]; then
     fi
 fi
 
-# 3. 创建本机工作目录并初始化为空（满足容器启动检查）
-mkdir -p "$RUN_DIR"
+# 3. 在当前目录下创建空 workspace 目录（不修改任何已有文件）
+mkdir -p "$PWD/workspace"
 
 # 4. 创建并启动容器
-#    - /workspace          → 空目录，满足容器入口检查
-#    - /workspace/$PROJECT → 项目根目录，双向同步
+#    ./workspace → 容器 /workspace（空目录，满足容器入口检查）
+#    Claude 在 /workspace/gy-09-10-01-1/ 下生成代码，双向同步到本机 ./workspace/gy-09-10-01-1/
 echo "🚀 创建容器 $CONTAINER_NAME ..."
 docker run -it --init \
     --restart=no \
     --cap-drop ALL \
     --security-opt no-new-privileges \
     --name "$CONTAINER_NAME" \
-    --mount "type=bind,src=$RUN_DIR,dst=/workspace" \
-    --mount "type=bind,src=$PWD,dst=/workspace/$CONTAINER_NAME" \
+    --mount "type=bind,src=$PWD/workspace,dst=/workspace" \
     -e "apikey=$API_KEY" \
     "$IMAGE"
