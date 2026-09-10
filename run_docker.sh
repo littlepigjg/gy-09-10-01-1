@@ -6,7 +6,7 @@ API_KEY="${API_KEY:-}"
 IMAGE="adminfather/benzhi-claude-code:20260909-isolated-git"
 # =============================
 
-CONTAINER_NAME="claude-task"
+CONTAINER_NAME="$(basename "$PWD")"
 
 # 1. 检查容器是否已存在
 if docker ps -a --format '{{.Names}}' | grep -wq "$CONTAINER_NAME"; then
