@@ -38,16 +38,13 @@ if [ -z "$API_KEY" ]; then
     fi
 fi
 
-# 3. 创建本机工作目录并初始化为空
-mkdir -p "$RUN_DIR"
-
-# 4. 创建并启动容器（bind mount，前台交互模式）
+# 3. 创建并启动容器（bind mount，项目根目录 ↔ /workspace 双向同步）
 echo "🚀 创建容器 $CONTAINER_NAME ..."
 docker run -it --init \
     --restart=no \
     --cap-drop ALL \
     --security-opt no-new-privileges \
     --name "$CONTAINER_NAME" \
-    --mount "type=bind,src=$RUN_DIR,dst=/workspace" \
+    --mount "type=bind,src=$PWD,dst=/workspace" \
     -e "apikey=$API_KEY" \
     "$IMAGE"
